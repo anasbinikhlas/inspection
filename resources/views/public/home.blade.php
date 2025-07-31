@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProInspect - Professional Vehicle Inspection Service</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -29,9 +30,9 @@
                     <a href="#services" class="text-gray-700 hover:text-blue-600 transition duration-300">Services</a>
                     <a href="#pricing" class="text-gray-700 hover:text-blue-600 transition duration-300">Pricing</a>
                     <a href="#contact" class="text-gray-700 hover:text-blue-600 transition duration-300">Contact</a>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-300">
+                    <a href="{{ route('appointment.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-300">
                         Book Now
-                    </button>
+                    </a>
                 </div>
                 <div class="md:hidden flex items-center">
                     <button x-data="{ open: false }" @click="open = !open" class="text-gray-700">
@@ -56,10 +57,10 @@
                         Know your car's true condition before you buy, sell, or maintain.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <button class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold transition duration-300 transform hover:scale-105">
+                        <a href="{{ route('appointment.create') }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold transition duration-300 transform hover:scale-105 text-center">
                             <i class="fas fa-calendar-check mr-2"></i>
                             Book Inspection
-                        </button>
+                        </a>
                         <button class="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold transition duration-300">
                             Learn More
                         </button>
@@ -74,31 +75,31 @@
                             </div>
                             
                             <!-- Quick Booking Form -->
-                            <form class="space-y-4">
+                            <form action="{{ route('appointment.create') }}" method="GET" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                                    <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option>Select Vehicle Type</option>
-                                        <option>Sedan</option>
-                                        <option>SUV</option>
-                                        <option>Hatchback</option>
-                                        <option>Truck</option>
-                                        <option>Motorcycle</option>
+                                    <select name="vehicle_type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select Vehicle Type</option>
+                                        <option value="sedan">Sedan</option>
+                                        <option value="suv">SUV</option>
+                                        <option value="hatchback">Hatchback</option>
+                                        <option value="truck">Truck</option>
+                                        <option value="motorcycle">Motorcycle</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                    <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option>Select Location</option>
-                                        <option>Downtown Center</option>
-                                        <option>North Branch</option>
-                                        <option>South Branch</option>
-                                        <option>Mobile Service</option>
+                                    <select name="location" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select Location</option>
+                                        <option value="downtown">Downtown Center</option>
+                                        <option value="north">North Branch</option>
+                                        <option value="south">South Branch</option>
+                                        <option value="mobile">Mobile Service</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
-                                    <input type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <input type="date" name="preferred_date" min="{{ date('Y-m-d') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
                                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300">
                                     Check Availability
@@ -238,9 +239,9 @@
                             <li><i class="fas fa-check text-green-500 mr-3"></i>Basic report</li>
                             <li><i class="fas fa-times text-gray-400 mr-3"></i>Photo documentation</li>
                         </ul>
-                        <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition duration-300">
+                        <a href="{{ route('appointment.create', ['package' => 'basic']) }}" class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition duration-300 text-center">
                             Choose Basic
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -260,9 +261,9 @@
                             <li><i class="fas fa-check text-green-500 mr-3"></i>Damage mapping</li>
                             <li><i class="fas fa-check text-green-500 mr-3"></i>Test drive included</li>
                         </ul>
-                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300">
+                        <a href="{{ route('appointment.create', ['package' => 'complete']) }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300 text-center">
                             Choose Complete
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -279,9 +280,9 @@
                             <li><i class="fas fa-check text-green-500 mr-3"></i>Priority scheduling</li>
                             <li><i class="fas fa-check text-green-500 mr-3"></i>Follow-up consultation</li>
                         </ul>
-                        <button class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold transition duration-300">
+                        <a href="{{ route('appointment.create', ['package' => 'premium']) }}" class="block w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold transition duration-300 text-center">
                             Choose Premium
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -334,28 +335,29 @@
                 
                 <div class="bg-white rounded-xl shadow-lg p-8">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6">Send us a message</h3>
-                    <form class="space-y-6">
+                    <form action="{{ route('contact.store') }}" method="POST" class="space-y-6">
+                        @csrf
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <input type="text" name="first_name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <input type="text" name="last_name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="email" name="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="tel" name="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                            <textarea rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                            <textarea name="message" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required></textarea>
                         </div>
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300">
                             Send Message
