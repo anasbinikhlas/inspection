@@ -36,27 +36,27 @@
                         Dashboard
                     </a>
                     
-                    <a href="{{ route('admin.appointments.index') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.appointments*') ? 'bg-gray-900 text-white' : '' }}">
+                    <a href="{{ route('admin.appointments.index') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.appointments.*') ? 'bg-gray-900 text-white' : '' }}">
                         <i class="fas fa-calendar-check mr-4"></i>
                         Appointments
                     </a>
                     
-                    <a href="{{ route('admin.inspections') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.inspections*') ? 'bg-gray-900 text-white' : '' }}">
+                    <a href="{{ route('admin.inspections.index') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.inspections.*') ? 'bg-gray-900 text-white' : '' }}">
                         <i class="fas fa-clipboard-check mr-4"></i>
                         Inspections
                     </a>
                     
-                    <a href="{{ route('admin.customers') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.customers*') ? 'bg-gray-900 text-white' : '' }}">
+                    <a href="{{ route('admin.customers.index') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.customers.*') ? 'bg-gray-900 text-white' : '' }}">
                         <i class="fas fa-users mr-4"></i>
                         Customers
                     </a>
                     
-                    <a href="{{ route('admin.inspectors') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.inspectors*') ? 'bg-gray-900 text-white' : '' }}">
+                    <a href="{{ route('admin.inspectors.index') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.inspectors.*') ? 'bg-gray-900 text-white' : '' }}">
                         <i class="fas fa-user-tie mr-4"></i>
                         Inspectors
                     </a>
                     
-                    <a href="{{ route('admin.locations') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.locations*') ? 'bg-gray-900 text-white' : '' }}">
+                    <a href="{{ route('admin.locations.index') }}" class="mt-1 group flex items-center px-2 py-2 text-base leading-6 font-medium rounded-md text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none focus:text-white focus:bg-gray-700 transition ease-in-out duration-150 {{ request()->routeIs('admin.locations.*') ? 'bg-gray-900 text-white' : '' }}">
                         <i class="fas fa-map-marker-alt mr-4"></i>
                         Locations
                     </a>

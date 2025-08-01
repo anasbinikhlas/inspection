@@ -114,6 +114,40 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/settings', function () {
         return view('admin.settings.index');
     })->name('settings');
+
+    /*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Public routes
+Route::get('/', function () {
+    return view('public.home');
+})->name('home');
+
+// Appointment routes (for now, we'll create placeholders)
+Route::get('/appointment/create', function () {
+    return view('appointment.create');
+})->name('appointment.create');
+
+Route::post('/appointment/store', function () {
+    // TODO: Handle appointment booking
+    return redirect()->back()->with('success', 'Appointment request received!');
+})->name('appointment.store');
+
+// Contact form route
+Route::post('/contact', function () {
+    // TODO: Handle contact form
+    return redirect()->back()->with('success', 'Message sent successfully!');
+})->name('contact.store');
+
+// Auth routes (Laravel Breeze provides these)
+require __DIR__.'/auth.php';
+
+
+
+
 });
 
 /*
