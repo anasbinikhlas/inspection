@@ -50,7 +50,8 @@
             </div>
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
-<a href="{{ route('admin.appointments.index', ['status' => 'pending']) }}" class="text-yellow-600 hover:text-yellow-900">View all pending</a>                </div>
+<a href="{{ route('admin.appointments.index', ['status' => 'pending']) }}" class="text-yellow-600 hover:text-yellow-900">View all pending</a>
+                </div>
             </div>
         </div>
 
@@ -141,9 +142,10 @@
                     <p class="text-gray-500 text-center py-8">No appointments scheduled for today</p>
                 @endif
                 <div class="mt-4">
-<a href="{{ route('admin.appointments.index') }}" class="text-sm text-blue-600 hover:text-blue-900">
+                    <a href="{{ route('admin.appointments.index') }}" class="text-sm text-blue-600 hover:text-blue-900">
     View all appointments →
 </a>
+                    </a>
                 </div>
             </div>
         </div>
@@ -184,8 +186,7 @@
                     <p class="text-gray-500 text-center py-8">No upcoming appointments</p>
                 @endif
                 <div class="mt-4">
-                    <a href="{{ route('admin.appointments.index', ['filter' => 'upcoming']) }}" class="text-sm text-blue-600 hover:text-blue-900">View all upcoming →</a>
-
+<a href="{{ route('admin.appointments.index', ['filter' => 'upcoming']) }}" class="text-sm text-blue-600 hover:text-blue-900">View all upcoming →</a>
                 </div>
             </div>
         </div>
@@ -226,8 +227,7 @@
                     <p class="text-gray-500 text-center py-8">No performance data available</p>
                 @endif
                 <div class="mt-4">
-                    <a href="{{ route('admin.inspectors.index') }}" class="text-sm text-blue-600 hover:text-blue-900">View all inspectors →</a>
-
+<a href="{{ route('admin.inspectors.index') }}" class="text-sm text-blue-600 hover:text-blue-900">View all inspectors →</a>
                 </div>
             </div>
         </div>
