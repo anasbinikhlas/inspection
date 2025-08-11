@@ -70,41 +70,178 @@
                     <div class="relative">
                         <div class="bg-white rounded-2xl p-8 shadow-2xl">
                             <div class="text-center mb-6">
-                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Quick Booking</h3>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Quick Appointment</h3>
                                 <p class="text-gray-600">Schedule your inspection in minutes</p>
                             </div>
                             
-                            <!-- Quick Booking Form -->
-                            <form action="{{ route('appointment.create') }}" method="GET" class="space-y-4">
+                            <!-- Updated Quick Booking Form -->
+                            <form action="{{ route('appointment.store') }}" method="POST" class="space-y-4" x-data="{ 
+                                selectedLocation: '',
+                                selectedDate: '',
+                                availableSlots: [],
+                                checkingAvailability: false,
+                                vehicleMakes: ['Toyota', 'Honda', 'Nissan', 'Suzuki', 'Mercedes', 'BMW', 'Audi', 'Hyundai', 'KIA', 'Mazda', 'Ford', 'Chevrolet'],
+                                selectedMake: '',
+                                vehicleModels: []
+                            }">
+                                @csrf
+                                
+                                <!-- Name Field -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                                    <select name="vehicle_type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value="">Select Vehicle Type</option>
-                                        <option value="sedan">Sedan</option>
-                                        <option value="suv">SUV</option>
-                                        <option value="hatchback">Hatchback</option>
-                                        <option value="truck">Truck</option>
-                                        <option value="motorcycle">Motorcycle</option>
-                                    </select>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                    <input type="text" name="customer_name" required 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="Enter your full name">
                                 </div>
+
+                                <!-- Contact Number -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                    <select name="location" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
+                                    <input type="tel" name="customer_phone" required 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="+92 300 1234567">
+                                </div>
+
+                                <!-- Email (hidden field for now, will be handled in full form) -->
+                                <input type="hidden" name="customer_email" value="">
+
+                                <!-- Location -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Location *</label>
+                                    <select name="location_id" required x-model="selectedLocation"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                         <option value="">Select Location</option>
-                                        <option value="downtown">Downtown Center</option>
-                                        <option value="north">North Branch</option>
-                                        <option value="south">South Branch</option>
-                                        <option value="mobile">Mobile Service</option>
+                                        <option value="1">Downtown Center - Main Office</option>
+                                        <option value="2">North Branch - Industrial Area</option>
+                                        <option value="3">South Branch - Commercial District</option>
+                                        <option value="4">Mobile Service - We Come to You</option>
                                     </select>
                                 </div>
+
+                                <!-- Vehicle Make -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
-                                    <input type="date" name="preferred_date" min="{{ date('Y-m-d') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make *</label>
+                                    <select name="vehicle_make" required x-model="selectedMake"
+                                            @change="vehicleModels = getModelsForMake(selectedMake)"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select Make</option>
+                                        <template x-for="make in vehicleMakes" :key="make">
+                                            <option :value="make" x-text="make"></option>
+                                        </template>
+                                    </select>
                                 </div>
-                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300">
-                                    Check Availability
+
+                                <!-- Vehicle Model -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Model *</label>
+                                    <input type="text" name="vehicle_model" required 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="e.g., Corolla, Civic, City">
+                                </div>
+
+                                <!-- Vehicle Year -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Year *</label>
+                                    <select name="vehicle_year" required 
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select Year</option>
+                                        <script>
+                                            const currentYear = new Date().getFullYear();
+                                            const startYear = 2000;
+                                            for(let year = currentYear; year >= startYear; year--) {
+                                                document.write(`<option value="${year}">${year}</option>`);
+                                            }
+                                        </script>
+                                    </select>
+                                </div>
+
+                                <!-- Inspection Date -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date *</label>
+                                    <input type="date" name="appointment_date" required x-model="selectedDate"
+                                           @change="checkAvailability()" 
+                                           :min="new Date().toISOString().split('T')[0]"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+
+                                <!-- Time Slots -->
+                                <div x-show="availableSlots.length > 0">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Available Time Slots *</label>
+                                    <select name="appointment_time" required 
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select Time</option>
+                                        <template x-for="slot in availableSlots" :key="slot.value">
+                                            <option :value="slot.value" x-text="slot.display"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <!-- Service Type
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Package</label>
+                                    <select name="service_type" 
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="basic">Basic Inspection - $99</option>
+                                        <option value="comprehensive" selected>Complete Inspection - $199</option>
+                                        <option value="premium">Premium Plus - $299</option>
+                                    </select>
+                                </div> -->
+
+                                <!-- Loading indicator -->
+                                <div x-show="checkingAvailability" class="text-center py-2">
+                                    <i class="fas fa-spinner fa-spin text-blue-600"></i>
+                                    <span class="ml-2 text-sm text-gray-600">Checking availability...</span>
+                                </div>
+
+                                <button type="submit" 
+                                        :disabled="!selectedLocation || !selectedDate || availableSlots.length === 0"
+                                        :class="selectedLocation && selectedDate && availableSlots.length > 0 ? 
+                                            'bg-blue-600 hover:bg-blue-700 cursor-pointer' : 
+                                            'bg-gray-400 cursor-not-allowed'"
+                                        class="w-full text-white py-3 rounded-lg font-semibold transition duration-300">
+                                    <i class="fas fa-calendar-check mr-2"></i>
+                                    Book Appointment
                                 </button>
                             </form>
+
+                            <script>
+                                function checkAvailability() {
+                                    if (!this.selectedLocation || !this.selectedDate) return;
+                                    
+                                    this.checkingAvailability = true;
+                                    this.availableSlots = [];
+                                    
+                                    // Simulate API call - replace with actual endpoint
+                                    fetch(`/api/check-availability?date=${this.selectedDate}&location_id=${this.selectedLocation}`)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            this.availableSlots = data.time_slots || [];
+                                            this.checkingAvailability = false;
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            // Fallback time slots
+                                            this.availableSlots = [
+                                                {value: '09:00', display: '9:00 AM'},
+                                                {value: '11:00', display: '11:00 AM'},
+                                                {value: '14:00', display: '2:00 PM'},
+                                                {value: '16:00', display: '4:00 PM'}
+                                            ];
+                                            this.checkingAvailability = false;
+                                        });
+                                }
+
+                                function getModelsForMake(make) {
+                                    const models = {
+                                        'Toyota': ['Corolla', 'Camry', 'Prado', 'Hilux', 'Vitz', 'Passo'],
+                                        'Honda': ['Civic', 'City', 'Accord', 'CR-V', 'BR-V', 'Vezel'],
+                                        'Suzuki': ['Cultus', 'Swift', 'Wagon R', 'Alto', 'Mehran', 'Jimny'],
+                                        'Nissan': ['Sunny', 'Altima', 'X-Trail', 'Patrol', 'Micra'],
+                                        // Add more as needed
+                                    };
+                                    return models[make] || [];
+                                }
+                            </script>
                         </div>
                     </div>
                 </div>

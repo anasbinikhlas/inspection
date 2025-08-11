@@ -152,13 +152,13 @@
                         <label for="vehicle_type" class="block text-sm font-medium text-gray-700 mb-2">Vehicle Type *</label>
                         <select id="vehicle_type" name="vehicle_type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('vehicle_type') border-red-500 @enderror" required>
                             <option value="">Select Type</option>
-                            <option value="sedan" {{ old('vehicle_type', $prefilledData['vehicle_type'] ?? '') == 'sedan' ? 'selected' : '' }}>Sedan</option>
-                            <option value="suv" {{ old('vehicle_type', $prefilledData['vehicle_type'] ?? '') == 'suv' ? 'selected' : '' }}>SUV</option>
-                            <option value="hatchback" {{ old('vehicle_type', $prefilledData['vehicle_type'] ?? '') == 'hatchback' ? 'selected' : '' }}>Hatchback</option>
-                            <option value="truck" {{ old('vehicle_type', $prefilledData['vehicle_type'] ?? '') == 'truck' ? 'selected' : '' }}>Truck</option>
-                            <option value="motorcycle" {{ old('vehicle_type', $prefilledData['vehicle_type'] ?? '') == 'motorcycle' ? 'selected' : '' }}>Motorcycle</option>
-                            <option value="van" {{ old('vehicle_type', $prefilledData['vehicle_type'] ?? '') == 'van' ? 'selected' : '' }}>Van</option>
-                            <option value="coupe" {{ old('vehicle_type', $prefilledData['vehicle_type'] ?? '') == 'coupe' ? 'selected' : '' }}>Coupe</option>
+                            <option value="sedan" {{ old('vehicle_type', $prefilledData['vehicle_type']) == 'sedan' ? 'selected' : '' }}>Sedan</option>
+                            <option value="suv" {{ old('vehicle_type', $prefilledData['vehicle_type']) == 'suv' ? 'selected' : '' }}>SUV</option>
+                            <option value="hatchback" {{ old('vehicle_type', $prefilledData['vehicle_type']) == 'hatchback' ? 'selected' : '' }}>Hatchback</option>
+                            <option value="truck" {{ old('vehicle_type', $prefilledData['vehicle_type']) == 'truck' ? 'selected' : '' }}>Truck</option>
+                            <option value="motorcycle" {{ old('vehicle_type', $prefilledData['vehicle_type']) == 'motorcycle' ? 'selected' : '' }}>Motorcycle</option>
+                            <option value="van" {{ old('vehicle_type', $prefilledData['vehicle_type']) == 'van' ? 'selected' : '' }}>Van</option>
+                            <option value="coupe" {{ old('vehicle_type', $prefilledData['vehicle_type']) == 'coupe' ? 'selected' : '' }}>Coupe</option>
                         </select>
                         @error('vehicle_type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -267,7 +267,7 @@
                                 x-model="selectedLocation" @change="loadAvailableSlots()" required>
                             <option value="">Select Location</option>
                             @foreach($locations as $location)
-                                <option value="{{ $location->id }}" {{ old('location_id', $prefilledData['location'] ?? '') == $location->code ? 'selected' : '' }}>
+                                <option value="{{ $location->id }}" {{ old('location_id', $prefilledData['location']) == $location->code ? 'selected' : '' }}>
                                     {{ $location->name }} - {{ $location->city }}
                                 </option>
                             @endforeach
@@ -280,7 +280,7 @@
                     <div>
                         <label for="appointment_date" class="block text-sm font-medium text-gray-700 mb-2">Preferred Date *</label>
                         <input type="date" id="appointment_date" name="appointment_date" 
-                               value="{{ old('appointment_date', $prefilledData['preferred_date'] ?? '') }}" 
+                               value="{{ old('appointment_date', $prefilledData['preferred_date']) }}" 
                                min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('appointment_date') border-red-500 @enderror" 
                                x-model="selectedDate" @change="loadAvailableSlots()" required>
@@ -367,7 +367,7 @@
 function appointmentForm() {
     return {
         selectedLocation: '{{ old('location_id') }}',
-        selectedDate: '{{ old('appointment_date', $prefilledData['preferred_date'] ?? '') }}',
+        selectedDate: '{{ old('appointment_date', $prefilledData['preferred_date']) }}',
         selectedTime: '{{ old('appointment_time') }}',
         availableSlots: [],
         loadingSlots: false,

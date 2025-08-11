@@ -29,6 +29,8 @@ Route::prefix('appointment')->group(function () {
     Route::match(['GET', 'POST'], '/check-status', [AppointmentController::class, 'checkStatus'])->name('appointment.check-status');
     Route::get('/reschedule/{appointmentNumber}', [AppointmentController::class, 'reschedule'])->name('appointment.reschedule');
     Route::post('/reschedule/{appointmentNumber}', [AppointmentController::class, 'updateReschedule'])->name('appointment.update-reschedule');
+    // In routes/web.php or api.php
+    Route::get('/api/check-availability', [AppointmentController::class, 'checkAvailability']);
 });
 
 // API Routes for AJAX

@@ -2,290 +2,275 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Appointment;
-use App\Models\Customer;
-use App\Models\Location;
-use App\Models\Inspector;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\Appointment;
+use App\Models\Inspector;
+use App\Models\Location;
 use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
-    public function create(Request $request)
+    public function index()
     {
-        $locations = Location::active()->get();
+        $appointments = Appointment::with(['customer', 'inspector', 'location'])
+            ->orderBy('appointment_date', 'desc')
+            ->paginate(15);
         
-        // Get pricing based on package
-        $packages = [
-            'basic' => ['name' => 'Basic Inspection', 'price' => 99],
-            'complete' => ['name' => 'Complete Inspection', 'price' => 199],
-            'premium' => ['name' => 'Premium Plus', 'price' => 299]
-        ];
+        return view('appointments.index', compact('appointments'));
+    }
 
-        $selectedPackage = $request->get('package', 'complete');
-        $prefilledData = [
-            'vehicle_type' => $request->get('vehicle_type'),
-            'location' => $request->get('location'),
-            'preferred_date' => $request->get('preferred_date'),
-            'package' => $selectedPackage
-        ];
+    public function create()
+    {
+        $locations = Location::where('status', 'active')->get();
+        $inspectors = Inspector::where('status', 'active')->get();
+        
+        return view('appointment.schedule', compact('locations', 'inspectors'));
+    }
 
-        return view('appointment.create', compact('locations', 'packages', 'selectedPackage', 'prefilledData'));
+    public function confirmation($reference)
+    {
+        $appointment = Appointment::where('booking_reference', $reference)
+            ->with(['location', 'inspector'])
+            ->firstOrFail();
+        
+        return view('appointment.confirmation', compact('appointment'));
+    }
+
+    public function checkStatus()
+    {
+        return view('appointment.check-status');
+    }
+
+    public function getStatus(Request $request)
+    {
+        $request->validate([
+            'reference' => 'required|string',
+            'phone' => 'required|string'
+        ]);
+
+        $appointment = Appointment::where('booking_reference', $request->reference)
+            ->where('customer_phone', $request->phone)
+            ->with(['location', 'inspector', 'inspection'])
+            ->first();
+
+        if (!$appointment) {
+            return back()->withErrors(['reference' => 'No appointment found with these details.']);
+        }
+
+        return view('appointment.status', compact('appointment'));
+    }
+
+    public function show($id)
+    {
+        $appointment = Appointment::with(['customer', 'inspector', 'location', 'inspection'])
+            ->findOrFail($id);
+        
+        return view('appointments.show', compact('appointment'));
+    }
+
+    public function edit($id)
+    {
+        $appointment = Appointment::findOrFail($id);
+        $inspectors = Inspector::where('status', 'active')->get();
+        $locations = Location::where('status', 'active')->get();
+        
+        return view('appointments.edit', compact('appointment', 'inspectors', 'locations'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'appointment_date' => 'required|date|after:today',
+            'appointment_time' => 'required',
+            'inspector_id' => 'required|exists:inspectors,id',
+            'location_id' => 'required|exists:locations,id',
+        ]);
+
+        $appointment = Appointment::findOrFail($id);
+        $appointment->update($request->all());
+
+        return redirect()->route('appointments.index')
+            ->with('success', 'Appointment updated successfully.');
+    }
+
+    public function checkAvailability(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date|after:today',
+            'location_id' => 'required|exists:locations,id'
+        ]);
+
+        $date = $request->date;
+        $locationId = $request->location_id;
+
+        // Get available inspectors for this location
+        $availableInspectors = Inspector::where('location_id', $locationId)
+            ->where('status', 'active')
+            ->count();
+
+        // Get booked appointments for this date and location
+        $bookedSlots = Appointment::where('appointment_date', $date)
+            ->where('location_id', $locationId)
+            ->count();
+
+        // Define working hours (9 AM to 6 PM = 9 slots per inspector)
+        $slotsPerInspector = 9;
+        $totalAvailableSlots = $availableInspectors * $slotsPerInspector;
+        $availableSlots = $totalAvailableSlots - $bookedSlots;
+
+        // Generate available time slots
+        $timeSlots = [];
+        if ($availableSlots > 0) {
+            $startTime = Carbon::createFromFormat('H:i', '09:00');
+            for ($i = 0; $i < $slotsPerInspector; $i++) {
+                $timeSlot = $startTime->copy()->addHours($i)->format('H:i');
+                
+                // Check if this specific time slot is available
+                $slotBooked = Appointment::where('appointment_date', $date)
+                    ->where('location_id', $locationId)
+                    ->where('appointment_time', $timeSlot)
+                    ->count();
+                
+                if ($slotBooked < $availableInspectors) {
+                    $timeSlots[] = [
+                        'time' => $timeSlot,
+                        'display' => $startTime->copy()->addHours($i)->format('g:i A')
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'available' => $availableSlots > 0,
+            'available_slots' => $availableSlots,
+            'time_slots' => $timeSlots,
+            'message' => $availableSlots > 0 
+                ? "Great! We have {$availableSlots} slots available on this date."
+                : 'Sorry, no slots available on this date. Please choose another date.'
+        ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'zip_code' => 'nullable|string|max:10',
-            
-            'vehicle_make' => 'required|string|max:255',
-            'vehicle_model' => 'required|string|max:255',
-            'vehicle_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'vehicle_type' => 'required|string|in:sedan,suv,hatchback,truck,motorcycle,van,coupe',
-            'vin' => 'nullable|string|max:17',
-            'license_plate' => 'nullable|string|max:10',
-            'mileage' => 'nullable|integer|min:0',
-            'color' => 'nullable|string|max:50',
-            
-            'location_id' => 'required|exists:locations,id',
-            'package_type' => 'required|in:basic,complete,premium',
-            'appointment_date' => 'required|date|after:today',
-            'appointment_time' => 'required|string',
-            'customer_notes' => 'nullable|string|max:1000'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            // Create or find customer
-            $customer = Customer::firstOrCreate(
-                ['email' => $validated['email']],
-                [
-                    'first_name' => $validated['first_name'],
-                    'last_name' => $validated['last_name'],
-                    'phone' => $validated['phone'],
-                    'address' => $validated['address'],
-                    'city' => $validated['city'],
-                    'state' => $validated['state'],
-                    'zip_code' => $validated['zip_code']
-                ]
-            );
-
-            // Get package pricing
-            $packagePricing = [
-                'basic' => 99,
-                'complete' => 199,
-                'premium' => 299
-            ];
-
-            // Check availability
-            $appointmentDateTime = Carbon::parse($validated['appointment_date'] . ' ' . $validated['appointment_time']);
-            $isAvailable = $this->checkAvailability($validated['location_id'], $appointmentDateTime);
-            
-            if (!$isAvailable) {
-                return back()->withErrors(['appointment_time' => 'This time slot is not available.'])->withInput();
-            }
-
-            // Create appointment
-            $appointment = Appointment::create([
-                'appointment_number' => Appointment::generateAppointmentNumber(),
-                'customer_id' => $customer->id,
-                'location_id' => $validated['location_id'],
-                'vehicle_make' => $validated['vehicle_make'],
-                'vehicle_model' => $validated['vehicle_model'],
-                'vehicle_year' => $validated['vehicle_year'],
-                'vehicle_type' => $validated['vehicle_type'],
-                'vin' => $validated['vin'],
-                'license_plate' => $validated['license_plate'],
-                'mileage' => $validated['mileage'],
-                'color' => $validated['color'],
-                'package_type' => $validated['package_type'],
-                'price' => $packagePricing[$validated['package_type']],
-                'appointment_date' => $validated['appointment_date'],
-                'appointment_time' => $validated['appointment_time'],
-                'customer_notes' => $validated['customer_notes'],
-                'status' => 'pending'
-            ]);
-
-            DB::commit();
-
-            // Send confirmation email (implement later)
-            // $this->sendConfirmationEmail($appointment);
-
-            return redirect()->route('appointment.confirmation', $appointment->appointment_number)
-                           ->with('success', 'Your appointment has been successfully scheduled!');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->withErrors(['error' => 'Something went wrong. Please try again.'])->withInput();
-        }
-    }
-
-    public function confirmation($appointmentNumber)
-    {
-        $appointment = Appointment::with(['customer', 'location'])
-                                 ->where('appointment_number', $appointmentNumber)
-                                 ->firstOrFail();
-
-        return view('appointment.confirmation', compact('appointment'));
-    }
-
-    public function checkStatus(Request $request)
-    {
-        if ($request->isMethod('post')) {
-            $request->validate([
-                'search' => 'required|string'
-            ]);
-
-            $search = $request->input('search');
-            
-            // Search by appointment number, email, or phone
-            $appointment = Appointment::with(['customer', 'location', 'inspector', 'inspection'])
-                ->where(function($query) use ($search) {
-                    $query->where('appointment_number', $search)
-                          ->orWhereHas('customer', function($q) use ($search) {
-                              $q->where('email', $search)
-                                ->orWhere('phone', $search);
-                          });
-                })
-                ->first();
-
-            if (!$appointment) {
-                return back()->withErrors(['search' => 'No appointment found with the provided information.']);
-            }
-
-            return view('appointment.status', compact('appointment'));
-        }
-
-        return view('appointment.check-status');
-    }
-
-    public function reschedule($appointmentNumber)
-    {
-        $appointment = Appointment::with(['customer', 'location'])
-                                 ->where('appointment_number', $appointmentNumber)
-                                 ->firstOrFail();
-
-        if (!$appointment->canBeRescheduled()) {
-            return redirect()->back()->withErrors(['error' => 'This appointment cannot be rescheduled.']);
-        }
-
-        $locations = Location::active()->get();
-        
-        return view('appointment.reschedule', compact('appointment', 'locations'));
-    }
-
-    public function updateReschedule(Request $request, $appointmentNumber)
-    {
-        $appointment = Appointment::where('appointment_number', $appointmentNumber)->firstOrFail();
-
-        if (!$appointment->canBeRescheduled()) {
-            return redirect()->back()->withErrors(['error' => 'This appointment cannot be rescheduled.']);
-        }
-
-        $validated = $request->validate([
-            'appointment_date' => 'required|date|after:today',
-            'appointment_time' => 'required|string',
-            'location_id' => 'required|exists:locations,id'
-        ]);
-
-        $appointmentDateTime = Carbon::parse($validated['appointment_date'] . ' ' . $validated['appointment_time']);
-        
-        if (!$this->checkAvailability($validated['location_id'], $appointmentDateTime, $appointment->id)) {
-            return back()->withErrors(['appointment_time' => 'This time slot is not available.'])->withInput();
-        }
-
-        $appointment->update([
-            'appointment_date' => $validated['appointment_date'],
-            'appointment_time' => $validated['appointment_time'],
-            'location_id' => $validated['location_id'],
-            'status' => 'rescheduled'
-        ]);
-
-        return redirect()->route('appointment.confirmation', $appointment->appointment_number)
-                        ->with('success', 'Your appointment has been successfully rescheduled!');
-    }
-
-    public function getAvailableSlots(Request $request)
-    {
         $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'required|string|max:20',
+            'customer_email' => 'required|email|max:255',
+            'vehicle_make' => 'required|string|max:100',
+            'vehicle_model' => 'required|string|max:100',
+            'vehicle_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'appointment_date' => 'required|date|after:today',
+            'appointment_time' => 'required',
             'location_id' => 'required|exists:locations,id',
-            'date' => 'required|date|after:today'
+            'service_type' => 'required|in:basic,comprehensive,premium'
         ]);
 
-        $locationId = $request->input('location_id');
-        $date = $request->input('date');
+        // Find available inspector
+        $inspector = Inspector::where('location_id', $request->location_id)
+            ->where('status', 'active')
+            ->whereNotIn('id', function($query) use ($request) {
+                $query->select('inspector_id')
+                    ->from('appointments')
+                    ->where('appointment_date', $request->appointment_date)
+                    ->where('appointment_time', $request->appointment_time);
+            })
+            ->first();
 
-        $availableSlots = $this->getAvailableSlotsForDate($locationId, $date);
-
-        return response()->json(['slots' => $availableSlots]);
-    }
-
-    private function checkAvailability($locationId, $dateTime, $excludeAppointmentId = null)
-    {
-        $date = $dateTime->format('Y-m-d');
-        $time = $dateTime->format('H:i:s');
-
-        $query = Appointment::where('location_id', $locationId)
-                           ->where('appointment_date', $date)
-                           ->where('appointment_time', $time)
-                           ->whereIn('status', ['pending', 'confirmed', 'in_progress']);
-
-        if ($excludeAppointmentId) {
-            $query->where('id', '!=', $excludeAppointmentId);
+        if (!$inspector) {
+            return back()->withErrors(['appointment_time' => 'This time slot is no longer available.']);
         }
 
-        return $query->count() === 0;
+        $appointment = Appointment::create([
+            'customer_name' => $request->customer_name,
+            'customer_phone' => $request->customer_phone,
+            'customer_email' => $request->customer_email,
+            'vehicle_make' => $request->vehicle_make,
+            'vehicle_model' => $request->vehicle_model,
+            'vehicle_year' => $request->vehicle_year,
+            'appointment_date' => $request->appointment_date,
+            'appointment_time' => $request->appointment_time,
+            'location_id' => $request->location_id,
+            'inspector_id' => $inspector->id,
+            'service_type' => $request->service_type,
+            'status' => 'scheduled',
+            'booking_reference' => 'INS-' . strtoupper(uniqid())
+        ]);
+
+        // Send confirmation email/SMS here if needed
+
+        return redirect()->route('appointment.confirmation', $appointment->booking_reference)
+            ->with('success', 'Appointment booked successfully!');
     }
 
-    private function getAvailableSlotsForDate($locationId, $date)
+    public function calendar()
     {
-        $location = Location::find($locationId);
-        $dayOfWeek = Carbon::parse($date)->format('l'); // Monday, Tuesday, etc.
-        
-        // Default operating hours (you can customize this based on location)
-        $operatingHours = $location->operating_hours ?? [
-            'Monday' => ['09:00', '17:00'],
-            'Tuesday' => ['09:00', '17:00'],
-            'Wednesday' => ['09:00', '17:00'],
-            'Thursday' => ['09:00', '17:00'],
-            'Friday' => ['09:00', '17:00'],
-            'Saturday' => ['09:00', '15:00'],
-            'Sunday' => null // Closed
-        ];
+        $appointments = Appointment::with(['customer', 'inspector', 'location'])
+            ->where('appointment_date', '>=', now())
+            ->get();
 
-        if (!isset($operatingHours[$dayOfWeek]) || $operatingHours[$dayOfWeek] === null) {
-            return []; // Closed on this day
-        }
+        $events = $appointments->map(function ($appointment) {
+            return [
+                'id' => $appointment->id,
+                'title' => $appointment->customer_name . ' - ' . $appointment->vehicle_make,
+                'start' => $appointment->appointment_date . 'T' . $appointment->appointment_time,
+                'end' => $appointment->appointment_date . 'T' . 
+                    Carbon::createFromFormat('H:i', $appointment->appointment_time)->addHour()->format('H:i'),
+                'backgroundColor' => $this->getStatusColor($appointment->status),
+                'extendedProps' => [
+                    'customer' => $appointment->customer_name,
+                    'phone' => $appointment->customer_phone,
+                    'vehicle' => $appointment->vehicle_make . ' ' . $appointment->vehicle_model,
+                    'inspector' => $appointment->inspector->name ?? 'TBD',
+                    'location' => $appointment->location->name ?? 'TBD',
+                    'status' => $appointment->status
+                ]
+            ];
+        });
 
-        [$startTime, $endTime] = $operatingHours[$dayOfWeek];
-        $slots = [];
+        return view('appointments.calendar', compact('events'));
+    }
+
+    private function getStatusColor($status)
+    {
+        return match($status) {
+            'scheduled' => '#3B82F6',
+            'in_progress' => '#F59E0B',
+            'completed' => '#10B981',
+            'cancelled' => '#EF4444',
+            default => '#6B7280'
+        };
+    }
+
+    public function getTimeSlots(Request $request)
+    {
+        $date = $request->date;
+        $locationId = $request->location_id;
+
+        $timeSlots = [];
+        $startTime = Carbon::createFromFormat('H:i', '09:00');
         
-        // Generate 30-minute slots
-        $current = Carbon::parse($date . ' ' . $startTime);
-        $end = Carbon::parse($date . ' ' . $endTime);
-        
-        while ($current->lt($end)) {
-            $timeSlot = $current->format('H:i');
+        for ($i = 0; $i < 9; $i++) {
+            $timeSlot = $startTime->copy()->addHours($i)->format('H:i');
             
-            // Check if this slot is available
-            if ($this->checkAvailability($locationId, $current)) {
-                $slots[] = [
-                    'time' => $timeSlot,
-                    'display' => $current->format('g:i A')
+            $availableInspectors = Inspector::where('location_id', $locationId)
+                ->where('status', 'active')
+                ->whereNotIn('id', function($query) use ($date, $timeSlot) {
+                    $query->select('inspector_id')
+                        ->from('appointments')
+                        ->where('appointment_date', $date)
+                        ->where('appointment_time', $timeSlot);
+                })
+                ->count();
+
+            if ($availableInspectors > 0) {
+                $timeSlots[] = [
+                    'value' => $timeSlot,
+                    'display' => $startTime->copy()->addHours($i)->format('g:i A'),
+                    'available' => true
                 ];
             }
-            
-            $current->addMinutes(30);
         }
 
-        return $slots;
+        return response()->json($timeSlots);
     }
 }
