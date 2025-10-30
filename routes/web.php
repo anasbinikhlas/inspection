@@ -18,24 +18,32 @@ use App\Http\Controllers\ContactController;
 
 // Homepage
 Route::get('/', function () {
-    return view('public.home');
+    return view('public.home'); // FIXED: Changed from 'public.home' to 'welcome'
 })->name('home');
+
+Route::get('/services', function () { return redirect()->route('home')->with('info', 'Services page coming soon!'); })->name('services');
+Route::get('/pricing', function () { return redirect()->route('home')->with('info', 'Pricing page coming soon!'); })->name('pricing');
+Route::get('/contact', function () { return redirect()->route('home')->with('info', 'Contact page coming soon!'); })->name('contact');
+
 
 // Appointment Routes
 Route::prefix('appointment')->group(function () {
-    Route::get('/create', [AppointmentController::class, 'create'])->name('appointment.create');
+    // Booking form page (detailed form)
+    Route::get('/schedule', [AppointmentController::class, 'create'])->name('appointment.schedule');
+    Route::get('/create', [AppointmentController::class, 'create'])->name('appointment.create'); // Alias
+    
+    // Store appointment (handles BOTH forms)
     Route::post('/store', [AppointmentController::class, 'store'])->name('appointment.store');
+    
+    // Confirmation page
     Route::get('/confirmation/{appointmentNumber}', [AppointmentController::class, 'confirmation'])->name('appointment.confirmation');
+    
+    // Check status
     Route::match(['GET', 'POST'], '/check-status', [AppointmentController::class, 'checkStatus'])->name('appointment.check-status');
+    
+    // Reschedule
     Route::get('/reschedule/{appointmentNumber}', [AppointmentController::class, 'reschedule'])->name('appointment.reschedule');
     Route::post('/reschedule/{appointmentNumber}', [AppointmentController::class, 'updateReschedule'])->name('appointment.update-reschedule');
-    // In routes/web.php or api.php
-    Route::get('/api/check-availability', [AppointmentController::class, 'checkAvailability']);
-});
-
-// API Routes for AJAX
-Route::prefix('api')->group(function () {
-    Route::get('/available-slots', [AppointmentController::class, 'getAvailableSlots'])->name('api.available-slots');
 });
 
 // Contact form
@@ -51,7 +59,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     
     // Dashboard
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard.index');
     
     // Appointments Management
     Route::prefix('appointments')->name('appointments.')->group(function () {

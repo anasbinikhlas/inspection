@@ -1,47 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProInspect - Professional Vehicle Inspection Service</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg fixed w-full z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
-                        <i class="fas fa-car text-3xl text-blue-600 mr-3"></i>
-                        <span class="text-2xl font-bold text-gray-800">ProInspect</span>
-                    </div>
-                </div>
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#home" class="text-gray-700 hover:text-blue-600 transition duration-300">Home</a>
-                    <a href="#services" class="text-gray-700 hover:text-blue-600 transition duration-300">Services</a>
-                    <a href="#pricing" class="text-gray-700 hover:text-blue-600 transition duration-300">Pricing</a>
-                    <a href="#contact" class="text-gray-700 hover:text-blue-600 transition duration-300">Contact</a>
-                    <a href="{{ route('appointment.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-300">
-                        Book Now
-                    </a>
-                </div>
-                <div class="md:hidden flex items-center">
-                    <button x-data="{ open: false }" @click="open = !open" class="text-gray-700">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
+@extends('layouts.app')
+
+@section('title', 'ProInspect - Professional Vehicle Inspection Service')
+
+@section('content')
 
     <!-- Hero Section -->
     <section id="home" class="gradient-bg min-h-screen flex items-center pt-16">
@@ -57,7 +18,7 @@
                         Know your car's true condition before you buy, sell, or maintain.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <a href="{{ route('appointment.create') }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold transition duration-300 transform hover:scale-105 text-center">
+                        <a href="{{ route('appointment.schedule') }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold transition duration-300 transform hover:scale-105 text-center">
                             <i class="fas fa-calendar-check mr-2"></i>
                             Book Inspection
                         </a>
@@ -74,136 +35,190 @@
                                 <p class="text-gray-600">Schedule your inspection in minutes</p>
                             </div>
                             
-                            <!-- Updated Quick Booking Form -->
-                            <form action="{{ route('appointment.store') }}" method="POST" class="space-y-4" x-data="{ 
-                                selectedLocation: '',
-                                selectedDate: '',
-                                availableSlots: [],
-                                checkingAvailability: false,
-                                vehicleMakes: ['Toyota', 'Honda', 'Nissan', 'Suzuki', 'Mercedes', 'BMW', 'Audi', 'Hyundai', 'KIA', 'Mazda', 'Ford', 'Chevrolet'],
-                                selectedMake: '',
-                                vehicleModels: []
-                            }">
-                                @csrf
-                                
-                                <!-- Name Field -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                                    <input type="text" name="customer_name" required 
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           placeholder="Enter your full name">
-                                </div>
 
-                                <!-- Contact Number -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
-                                    <input type="tel" name="customer_phone" required 
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           placeholder="+92 300 1234567">
-                                </div>
+<form action="{{ route('appointment.store') }}" method="POST" class="space-y-4" 
+      x-data="{
+          selectedLocation: '',
+          selectedDate: '',
+          availableSlots: [],
+          checkingAvailability: false,
+          vehicleMakes: ['Toyota', 'Honda', 'Nissan', 'Suzuki', 'Mercedes', 'BMW', 'Audi', 'Hyundai', 'KIA', 'Mazda', 'Ford', 'Chevrolet'],
+          selectedMake: '',
+          vehicleModels: [],
+          
+          init() {
+              // Auto-populate time slots on load for testing
+              this.availableSlots = [
+                  {value: '09:00', display: '9:00 AM'},
+                  {value: '10:00', display: '10:00 AM'},
+                  {value: '11:00', display: '11:00 AM'},
+                  {value: '14:00', display: '2:00 PM'},
+                  {value: '15:00', display: '3:00 PM'},
+                  {value: '16:00', display: '4:00 PM'}
+              ];
+          },
+          
+          checkAvailability() {
+              if (!this.selectedLocation || !this.selectedDate) return;
+              
+              this.checkingAvailability = true;
+              this.availableSlots = [];
+              
+              // Call actual API endpoint
+              fetch(`/api/check-availability?date=${this.selectedDate}&location_id=${this.selectedLocation}`)
+                  .then(response => response.json())
+                  .then(data => {
+                      this.availableSlots = data.time_slots || [];
+                      this.checkingAvailability = false;
+                  })
+                  .catch(error => {
+                      console.error('Error:', error);
+                      // Fallback time slots
+                      this.availableSlots = [
+                          {value: '09:00', display: '9:00 AM'},
+                          {value: '10:00', display: '10:00 AM'},
+                          {value: '11:00', display: '11:00 AM'},
+                          {value: '14:00', display: '2:00 PM'},
+                          {value: '15:00', display: '3:00 PM'},
+                          {value: '16:00', display: '4:00 PM'}
+                      ];
+                      this.checkingAvailability = false;
+                  });
+          },
+          
+          getModelsForMake(make) {
+              const models = {
+                  'Toyota': ['Corolla', 'Camry', 'Prado', 'Hilux', 'Vitz', 'Passo'],
+                  'Honda': ['Civic', 'City', 'Accord', 'CR-V', 'BR-V', 'Vezel'],
+                  'Suzuki': ['Cultus', 'Swift', 'Wagon R', 'Alto', 'Mehran', 'Jimny'],
+                  'Nissan': ['Sunny', 'Altima', 'X-Trail', 'Patrol', 'Micra'],
+                  'Mercedes': ['C-Class', 'E-Class', 'S-Class', 'GLA', 'GLC'],
+                  'BMW': ['3 Series', '5 Series', '7 Series', 'X1', 'X3', 'X5'],
+                  'Audi': ['A3', 'A4', 'A6', 'Q3', 'Q5', 'Q7'],
+                  'Hyundai': ['Elantra', 'Sonata', 'Tucson', 'Santa Fe'],
+                  'KIA': ['Sportage', 'Picanto', 'Rio', 'Sorento'],
+                  'Mazda': ['3', '6', 'CX-5', 'CX-9'],
+                  'Ford': ['Focus', 'Fusion', 'Explorer', 'F-150'],
+                  'Chevrolet': ['Cruze', 'Malibu', 'Equinox', 'Silverado']
+              };
+              return models[make] || [];
+          }
+      }">
+    @csrf
+    
+    <!-- Name Field -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+        <input type="text" name="customer_name" required 
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+               placeholder="Enter your full name">
+    </div>
 
-                                <!-- Email (hidden field for now, will be handled in full form) -->
-                                <input type="hidden" name="customer_email" value="">
+    <!-- Contact Number -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
+        <input type="tel" name="customer_phone" required 
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+               placeholder="+92 300 1234567">
+    </div>
 
-                                <!-- Location -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Location *</label>
-                                    <select name="location_id" required x-model="selectedLocation"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value="">Select Location</option>
-                                        <option value="1">Downtown Center - Main Office</option>
-                                        <option value="2">North Branch - Industrial Area</option>
-                                        <option value="3">South Branch - Commercial District</option>
-                                        <option value="4">Mobile Service - We Come to You</option>
-                                    </select>
-                                </div>
+    <!-- Email (hidden field - auto-generated in backend) -->
+    <input type="hidden" name="customer_email" value="">
 
-                                <!-- Vehicle Make -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make *</label>
-                                    <select name="vehicle_make" required x-model="selectedMake"
-                                            @change="vehicleModels = getModelsForMake(selectedMake)"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value="">Select Make</option>
-                                        <template x-for="make in vehicleMakes" :key="make">
-                                            <option :value="make" x-text="make"></option>
-                                        </template>
-                                    </select>
-                                </div>
+    <!-- Location -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Location *</label>
+        <select name="location_id" required x-model="selectedLocation"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Select Location</option>
+            <option value="1">Downtown Center - Main Office</option>
+            <option value="2">North Branch - Industrial Area</option>
+            <option value="3">South Branch - Commercial District</option>
+            <option value="4">Mobile Service - We Come to You</option>
+        </select>
+    </div>
 
-                                <!-- Vehicle Model -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Model *</label>
-                                    <input type="text" name="vehicle_model" required 
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           placeholder="e.g., Corolla, Civic, City">
-                                </div>
+    <!-- Vehicle Make -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make *</label>
+        <select name="vehicle_make" required x-model="selectedMake"
+                @change="vehicleModels = getModelsForMake(selectedMake)"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Select Make</option>
+            <template x-for="make in vehicleMakes" :key="make">
+                <option :value="make" x-text="make"></option>
+            </template>
+        </select>
+    </div>
 
-                                <!-- Vehicle Year -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Year *</label>
-                                    <select name="vehicle_year" required 
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value="">Select Year</option>
-                                        <script>
-                                            const currentYear = new Date().getFullYear();
-                                            const startYear = 2000;
-                                            for(let year = currentYear; year >= startYear; year--) {
-                                                document.write(`<option value="${year}">${year}</option>`);
-                                            }
-                                        </script>
-                                    </select>
-                                </div>
+    <!-- Vehicle Model -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Model *</label>
+        <input type="text" name="vehicle_model" required 
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+               placeholder="e.g., Corolla, Civic, City">
+    </div>
 
-                                <!-- Inspection Date -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date *</label>
-                                    <input type="date" name="appointment_date" required x-model="selectedDate"
-                                           @change="checkAvailability()" 
-                                           :min="new Date().toISOString().split('T')[0]"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                </div>
+    <!-- Vehicle Year -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Year *</label>
+        <select name="vehicle_year" required 
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Select Year</option>
+            @php
+                $currentYear = date('Y');
+                for($year = $currentYear; $year >= 2000; $year--) {
+                    echo "<option value='{$year}'>{$year}</option>";
+                }
+            @endphp
+        </select>
+    </div>
 
-                                <!-- Time Slots -->
-                                <div x-show="availableSlots.length > 0">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Available Time Slots *</label>
-                                    <select name="appointment_time" required 
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value="">Select Time</option>
-                                        <template x-for="slot in availableSlots" :key="slot.value">
-                                            <option :value="slot.value" x-text="slot.display"></option>
-                                        </template>
-                                    </select>
-                                </div>
+    <!-- Inspection Date -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date *</label>
+        <input type="date" name="appointment_date" required x-model="selectedDate"
+               @change="checkAvailability()" 
+               :min="new Date().toISOString().split('T')[0]"
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+    </div>
 
-                                <!-- Service Type
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Package</label>
-                                    <select name="service_type" 
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value="basic">Basic Inspection - $99</option>
-                                        <option value="comprehensive" selected>Complete Inspection - $199</option>
-                                        <option value="premium">Premium Plus - $299</option>
-                                    </select>
-                                </div> -->
+    <!-- Time Slots -->
+    <div x-show="availableSlots.length > 0">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Available Time Slots *</label>
+        <select name="appointment_time" required 
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Select Time</option>
+            <template x-for="slot in availableSlots" :key="slot.value">
+                <option :value="slot.value" x-text="slot.display"></option>
+            </template>
+        </select>
+    </div>
 
-                                <!-- Loading indicator -->
-                                <div x-show="checkingAvailability" class="text-center py-2">
-                                    <i class="fas fa-spinner fa-spin text-blue-600"></i>
-                                    <span class="ml-2 text-sm text-gray-600">Checking availability...</span>
-                                </div>
+    <!-- Service Type -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Package *</label>
+        <select name="service_type" required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="basic">Basic Inspection - $99</option>
+            <option value="comprehensive" selected>Complete Inspection - $199</option>
+            <option value="premium">Premium Plus - $299</option>
+        </select>
+    </div>
 
-                                <button type="submit" 
-                                        :disabled="!selectedLocation || !selectedDate || availableSlots.length === 0"
-                                        :class="selectedLocation && selectedDate && availableSlots.length > 0 ? 
-                                            'bg-blue-600 hover:bg-blue-700 cursor-pointer' : 
-                                            'bg-gray-400 cursor-not-allowed'"
-                                        class="w-full text-white py-3 rounded-lg font-semibold transition duration-300">
-                                    <i class="fas fa-calendar-check mr-2"></i>
-                                    Book Appointment
-                                </button>
-                            </form>
+    <!-- Loading indicator -->
+    <div x-show="checkingAvailability" class="text-center py-2">
+        <i class="fas fa-spinner fa-spin text-blue-600"></i>
+        <span class="ml-2 text-sm text-gray-600">Checking availability...</span>
+    </div>
 
+    <!-- Submit Button -->
+    <button type="submit" 
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300 shadow-lg hover:shadow-xl">
+        <i class="fas fa-calendar-check mr-2"></i>
+        Book Appointment
+    </button>
+</form>
                             <script>
                                 function checkAvailability() {
                                     if (!this.selectedLocation || !this.selectedDate) return;
@@ -505,68 +520,23 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <div class="flex items-center mb-4">
-                        <i class="fas fa-car text-2xl text-blue-400 mr-2"></i>
-                        <span class="text-xl font-bold">ProInspect</span>
-                    </div>
-                    <p class="text-gray-400">
-                        Professional vehicle inspection services you can trust. 
-                        Get peace of mind with every inspection.
-                    </p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Services</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-white transition duration-300">Vehicle Inspection</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Pre-Purchase Checks</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Mobile Service</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Fleet Inspections</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Company</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-white transition duration-300">About Us</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Our Team</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Careers</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Blog</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Support</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-white transition duration-300">Help Center</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Contact Us</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Terms of Service</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2025 ProInspect. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
 
-    <!-- Smooth scrolling -->
-    <script>
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
+
+@endsection
+
+@push('scripts')
+<script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         });
-    </script>
-</body>
-</html>
+    });
+</script>
+@endpush
