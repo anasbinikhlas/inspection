@@ -267,7 +267,7 @@
                                 x-model="selectedLocation" @change="loadAvailableSlots()" required>
                             <option value="">Select Location</option>
                             @foreach($locations as $location)
-                                <option value="{{ $location->id }}" {{ old('location_id', $prefilledData['location'] ?? '') == $location->code ? 'selected' : '' }}>
+                                <option value="{{ $location->id }}" {{ old('location_id') == $location->id ? 'selected' : '' }}>
                                     {{ $location->name }} - {{ $location->city }}
                                 </option>
                             @endforeach
