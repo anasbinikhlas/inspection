@@ -64,8 +64,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // Appointments Management
     Route::prefix('appointments')->name('appointments.')->group(function () {
         Route::get('/', [AdminAppointmentController::class, 'index'])->name('index');
-        Route::get('/create', [AdminAppointmentController::class, 'create'])->name('create');
-        Route::post('/', [AdminAppointmentController::class, 'store'])->name('store');
+        // Route::get('/create', [AdminAppointmentController::class, 'create'])->name('create');
+        // Route::post('/', [AdminAppointmentController::class, 'store'])->name('store');
         Route::get('/{appointment}', [AdminAppointmentController::class, 'show'])->name('show');
         Route::get('/{appointment}/edit', [AdminAppointmentController::class, 'edit'])->name('edit');
         Route::put('/{appointment}', [AdminAppointmentController::class, 'update'])->name('update');

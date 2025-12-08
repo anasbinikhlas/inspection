@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Facades\DB;
+use App\Models\Inspection;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Appointment;
@@ -45,7 +47,7 @@ class AdminAppointmentController extends Controller
             $query->where('appointment_date', '<=', $request->date_to);
         }
 
-        // Source filter (optional - if you track this)
+        // Source filter
         if ($request->filled('source')) {
             $query->where('source', $request->source);
         }
@@ -71,80 +73,8 @@ class AdminAppointmentController extends Controller
         return view('admin.appointments.index', compact('appointments', 'statusCounts', 'inspectors'));
     }
 
-    /**
-     * Show the form for creating a new appointment
-     */
-    public function create()
-    {
-        $customers = Customer::where('status', 'active')->orderBy('first_name')->get();
-        $inspectors = Inspector::where('status', 'active')->get();
-        $locations = Location::where('status', 'active')->get();
-
-        return view('admin.appointments.create', compact('customers', 'inspectors', 'locations'));
-    }
-
-    /**
-     * Store a newly created appointment
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'location_id' => 'required|exists:locations,id',
-            'inspector_id' => 'nullable|exists:inspectors,id',
-            'vehicle_make' => 'required|string|max:100',
-            'vehicle_model' => 'required|string|max:100',
-            'vehicle_year' => 'required|integer|min:1990|max:' . (date('Y') + 1),
-            'vehicle_type' => 'required|string',
-            'vin' => 'nullable|string|max:17',
-            'license_plate' => 'nullable|string',
-            'mileage' => 'nullable|integer',
-            'color' => 'nullable|string',
-            'package_type' => 'required|in:basic,complete,premium',
-            'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required',
-            'customer_notes' => 'nullable|string',
-            'admin_notes' => 'nullable|string',
-        ]);
-
-        // Package pricing and duration
-        $packages = [
-            'basic' => ['price' => 99.00, 'duration' => 90],
-            'complete' => ['price' => 199.00, 'duration' => 120],
-            'premium' => ['price' => 299.00, 'duration' => 150]
-        ];
-
-        $packageInfo = $packages[$validated['package_type']];
-
-        // Create appointment
-        $appointment = Appointment::create([
-            'appointment_number' => Appointment::generateAppointmentNumber(),
-            'customer_id' => $validated['customer_id'],
-            'location_id' => $validated['location_id'],
-            'inspector_id' => $validated['inspector_id'],
-            'vehicle_make' => $validated['vehicle_make'],
-            'vehicle_model' => $validated['vehicle_model'],
-            'vehicle_year' => $validated['vehicle_year'],
-            'vehicle_type' => $validated['vehicle_type'],
-            'vin' => $validated['vin'],
-            'license_plate' => $validated['license_plate'],
-            'mileage' => $validated['mileage'],
-            'color' => $validated['color'],
-            'package_type' => $validated['package_type'],
-            'price' => $packageInfo['price'],
-            'appointment_date' => $validated['appointment_date'],
-            'appointment_time' => $validated['appointment_time'],
-            'estimated_duration' => $packageInfo['duration'],
-            'status' => 'confirmed', // Admin-created appointments are auto-confirmed
-            'customer_notes' => $validated['customer_notes'],
-            'admin_notes' => $validated['admin_notes'],
-            'source' => 'admin',
-        ]);
-
-        return redirect()
-            ->route('admin.appointments.show', $appointment)
-            ->with('success', 'Appointment created successfully!');
-    }
+    // REMOVED: create() method - not needed anymore
+    // REMOVED: store() method - not needed anymore
 
     /**
      * Display the specified appointment
@@ -257,29 +187,52 @@ class AdminAppointmentController extends Controller
         return back()->with('success', 'Appointment cancelled successfully!');
     }
 
-    /**
-     * Assign inspector to appointment
-     */
-    public function assignInspector(Request $request, Appointment $appointment)
-    {
-        $request->validate([
-            'inspector_id' => 'required|exists:inspectors,id'
-        ]);
+/**
+ * Assign inspector to appointment and auto-create inspection
+ */
+public function assignInspector(Request $request, Appointment $appointment)
+{
+    $request->validate([
+        'inspector_id' => 'required|exists:inspectors,id'
+    ]);
 
-        // Check if inspector is available at this time
-        $conflict = Appointment::where('inspector_id', $request->inspector_id)
-            ->where('appointment_date', $appointment->appointment_date)
-            ->where('appointment_time', $appointment->appointment_time)
-            ->where('id', '!=', $appointment->id)
-            ->whereNotIn('status', ['cancelled', 'no_show'])
-            ->exists();
+    // Check if inspector is available at this time
+    $conflict = Appointment::where('inspector_id', $request->inspector_id)
+        ->where('appointment_date', $appointment->appointment_date)
+        ->where('appointment_time', $appointment->appointment_time)
+        ->where('id', '!=', $appointment->id)
+        ->whereNotIn('status', ['cancelled', 'no_show'])
+        ->exists();
 
-        if ($conflict) {
-            return back()->with('error', 'This inspector is already assigned to another appointment at this time.');
-        }
+    if ($conflict) {
+        return back()->with('error', 'This inspector is already assigned to another appointment at this time.');
+    }
 
+    DB::beginTransaction();
+    try {
+        // Update appointment with inspector
         $appointment->update(['inspector_id' => $request->inspector_id]);
 
-        return back()->with('success', 'Inspector assigned successfully!');
+// Auto-create inspection if not exists
+if (!$appointment->inspection) {
+    $inspection = Inspection::create([
+        'inspection_number' => Inspection::generateInspectionNumber(),
+        'appointment_id' => $appointment->id,
+        'inspector_id' => $request->inspector_id,
+        'status' => 'in_progress',  // Changed from 'pending'
+        'overall_condition' => 'good',
+        'recommendation' => 'buy',
+        'started_at' => now(),  // Set start time
+    ]);
+}
+
+        DB::commit();
+
+        return back()->with('success', 'Inspector assigned and inspection created successfully!');
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Failed to assign inspector: ' . $e->getMessage());
     }
+}
 }

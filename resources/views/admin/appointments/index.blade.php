@@ -192,10 +192,7 @@
                     All Appointments
                 @endif
             </h3>
-            <a href="{{ route('admin.appointments.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                <i class="fas fa-plus mr-2"></i>
-                New Appointment
-            </a>
+
         </div>
 
         <div class="px-4 py-5 sm:p-6">
@@ -390,10 +387,7 @@
                             Get started by creating your first appointment.
                         @endif
                     </p>
-                    <a href="{{ route('admin.appointments.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                        <i class="fas fa-plus mr-2"></i>
-                        Create Appointment
-                    </a>
+
                 </div>
             @endif
         </div>
