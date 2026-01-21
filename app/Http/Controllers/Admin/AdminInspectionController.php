@@ -311,4 +311,115 @@ class AdminInspectionController extends Controller
         
         return $pdf->download($filename);
     }
+
+    /**
+     * Show review page for inspection approval
+     */
+    public function review(Inspection $inspection)
+    {
+        $inspection->load(['appointment.customer', 'appointment.location', 'inspector', 'items', 'photos']);
+        
+        return view('admin.inspections.review', compact('inspection'));
+    }
+
+    /**
+     * Approve an inspection
+     */
+    public function approve(Request $request, Inspection $inspection)
+    {
+        // Check if inspection is completed
+        if ($inspection->status === 'completed') {
+            return back()->with('error', 'Only completed inspections can be approved.');
+        }
+
+        try {
+            $inspection->update([
+                'status' => 'completed',
+                'reviewed_at' => now(),
+            ]);
+
+            // Update appointment status
+            $inspection->appointment->update(['status' => 'completed']);
+
+            return redirect()->route('admin.inspections.show', $inspection)
+                           ->with('success', 'Inspection approved successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to approve inspection: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reject an inspection
+     */
+    public function reject(Request $request, Inspection $inspection)
+    {
+        $request->validate([
+            'rejection_notes' => 'required|string|min:10|max:1000',
+        ]);
+
+        // Check if inspection is completed
+        if ($inspection->status !== 'completed') {
+            return back()->with('error', 'Only completed inspections can be rejected.');
+        }
+
+        try {
+            $inspection->update([
+                'status' => 'in_progress',
+                'rejection_notes' => $request->rejection_notes,
+                'rejected_at' => now(),
+                'completed_at' => null, // Reset completion
+            ]);
+
+            return back()->with('success', 'Inspection rejected. Inspector will see the notes and can resubmit.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to reject inspection: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Edit and approve inspection
+     */
+    public function editAndApprove(Request $request, Inspection $inspection)
+    {
+        $validated = $request->validate([
+            'overall_condition' => 'required|in:excellent,good,fair,poor,needs_attention',
+            'recommendation' => 'required|in:buy,negotiate,avoid,minor_repairs,major_repairs',
+            'engine_transmission_score' => 'nullable|numeric|min:0|max:100',
+            'brakes_score' => 'nullable|numeric|min:0|max:100',
+            'suspension_steering_score' => 'nullable|numeric|min:0|max:100',
+            'interior_score' => 'nullable|numeric|min:0|max:100',
+            'ac_heater_score' => 'nullable|numeric|min:0|max:100',
+            'electrical_score' => 'nullable|numeric|min:0|max:100',
+            'exterior_body_score' => 'nullable|numeric|min:0|max:100',
+            'tyres_score' => 'nullable|numeric|min:0|max:100',
+            'frame_score' => 'nullable|numeric|min:0|max:100',
+            'test_drive_score' => 'nullable|numeric|min:0|max:100',
+            'major_issues' => 'nullable|string',
+            'minor_issues' => 'nullable|string',
+            'recommendations' => 'nullable|string',
+            'immediate_repairs_cost' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            $inspection->update($validated);
+
+            // Recalculate overall score
+            $inspection->overall_score = $inspection->calculateOverallScore();
+            $inspection->save();
+
+            // Mark as reviewed
+            $inspection->update([
+                'status' => 'reviewed',
+                'reviewed_at' => now(),
+            ]);
+
+            // Update appointment
+            $inspection->appointment->update(['status' => 'completed']);
+
+            return redirect()->route('admin.inspections.show', $inspection)
+                           ->with('success', 'Inspection edited and approved successfully!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Failed to save changes: ' . $e->getMessage());
+        }
+    }
 }

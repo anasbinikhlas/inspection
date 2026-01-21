@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\AdminInspectorController;
 use App\Http\Controllers\Admin\AdminLocationController;
 use App\Http\Controllers\Admin\AdminInspectionController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Inspector\InspectorController;
 use App\Http\Controllers\ContactController;
 
 /*
@@ -16,38 +18,55 @@ use App\Http\Controllers\ContactController;
 |--------------------------------------------------------------------------
 */
 
-// Homepage
 Route::get('/', function () {
-    return view('public.home'); // FIXED: Changed from 'public.home' to 'welcome'
+    return view('public.home');
 })->name('home');
 
 Route::get('/services', function () { return redirect()->route('home')->with('info', 'Services page coming soon!'); })->name('services');
 Route::get('/pricing', function () { return redirect()->route('home')->with('info', 'Pricing page coming soon!'); })->name('pricing');
 Route::get('/contact', function () { return redirect()->route('home')->with('info', 'Contact page coming soon!'); })->name('contact');
 
-
 // Appointment Routes
 Route::prefix('appointment')->group(function () {
-    // Booking form page (detailed form)
     Route::get('/schedule', [AppointmentController::class, 'create'])->name('appointment.schedule');
-    Route::get('/create', [AppointmentController::class, 'create'])->name('appointment.create'); // Alias
-    
-    // Store appointment (handles BOTH forms)
+    Route::get('/create', [AppointmentController::class, 'create'])->name('appointment.create');
     Route::post('/store', [AppointmentController::class, 'store'])->name('appointment.store');
-    
-    // Confirmation page
     Route::get('/confirmation/{appointmentNumber}', [AppointmentController::class, 'confirmation'])->name('appointment.confirmation');
-    
-    // Check status
     Route::match(['GET', 'POST'], '/check-status', [AppointmentController::class, 'checkStatus'])->name('appointment.check-status');
-    
-    // Reschedule
     Route::get('/reschedule/{appointmentNumber}', [AppointmentController::class, 'reschedule'])->name('appointment.reschedule');
     Route::post('/reschedule/{appointmentNumber}', [AppointmentController::class, 'updateReschedule'])->name('appointment.update-reschedule');
 });
 
-// Contact form
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
+
+// Admin Login
+Route::get('/admin/login', function () {
+    return view('auth.admin-login');
+})->middleware('guest')->name('admin.login');
+
+Route::post('/admin/login', [AuthenticatedSessionController::class, 'store'])
+    ->middleware('guest')
+    ->name('admin.login.store');
+
+// Inspector Login
+Route::get('/inspector/login', function () {
+    return view('auth.login');
+})->middleware('guest')->name('inspector.login');
+
+Route::post('/inspector/login', [AuthenticatedSessionController::class, 'store'])
+    ->middleware('guest')
+    ->name('inspector.login.store');
+
+// Default login redirect (optional)
+Route::get('/login', function () {
+    return redirect()->route('admin.login');
+})->middleware('guest')->name('login');
 
 /*
 |--------------------------------------------------------------------------
@@ -55,17 +74,12 @@ Route::post('/contact', [ContactController::class, 'store'])->name('contact.stor
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-    
-    // Dashboard
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard.index');
     
-    // Appointments Management
     Route::prefix('appointments')->name('appointments.')->group(function () {
         Route::get('/', [AdminAppointmentController::class, 'index'])->name('index');
-        // Route::get('/create', [AdminAppointmentController::class, 'create'])->name('create');
-        // Route::post('/', [AdminAppointmentController::class, 'store'])->name('store');
         Route::get('/{appointment}', [AdminAppointmentController::class, 'show'])->name('show');
         Route::get('/{appointment}/edit', [AdminAppointmentController::class, 'edit'])->name('edit');
         Route::put('/{appointment}', [AdminAppointmentController::class, 'update'])->name('update');
@@ -75,7 +89,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::post('/{appointment}/assign-inspector', [AdminAppointmentController::class, 'assignInspector'])->name('assign-inspector');
     });
     
-    // Inspections Management
     Route::prefix('inspections')->name('inspections.')->group(function () {
         Route::get('/', [AdminInspectionController::class, 'index'])->name('index');
         Route::get('/create/{appointment}', [AdminInspectionController::class, 'create'])->name('create');
@@ -85,9 +98,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::put('/{inspection}', [AdminInspectionController::class, 'update'])->name('update');
         Route::delete('/{inspection}', [AdminInspectionController::class, 'destroy'])->name('destroy');
         Route::get('/{inspection}/pdf', [AdminInspectionController::class, 'generatePDF'])->name('pdf');
+        
+        // Review/Approval routes
+        Route::get('/{inspection}/review', [AdminInspectionController::class, 'review'])->name('review');
+        Route::post('/{inspection}/approve', [AdminInspectionController::class, 'approve'])->name('approve');
+        Route::post('/{inspection}/reject', [AdminInspectionController::class, 'reject'])->name('reject');
+        Route::post('/{inspection}/edit-approve', [AdminInspectionController::class, 'editAndApprove'])->name('edit-approve');
     });
     
-    // Customers Management
     Route::prefix('customers')->name('customers.')->group(function () {
         Route::get('/', [AdminCustomerController::class, 'index'])->name('index');
         Route::get('/create', [AdminCustomerController::class, 'create'])->name('create');
@@ -98,7 +116,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::delete('/{customer}', [AdminCustomerController::class, 'destroy'])->name('destroy');
     });
     
-    // Inspectors Management
     Route::prefix('inspectors')->name('inspectors.')->group(function () {
         Route::get('/', [AdminInspectorController::class, 'index'])->name('index');
         Route::get('/create', [AdminInspectorController::class, 'create'])->name('create');
@@ -110,7 +127,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('/{inspector}/schedule', [AdminInspectorController::class, 'schedule'])->name('schedule');
     });
     
-    // Locations Management
     Route::prefix('locations')->name('locations.')->group(function () {
         Route::get('/', [AdminLocationController::class, 'index'])->name('index');
         Route::get('/create', [AdminLocationController::class, 'create'])->name('create');
@@ -121,11 +137,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::delete('/{location}', [AdminLocationController::class, 'destroy'])->name('destroy');
     });
     
-    // Reports & Analytics
     Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
     Route::get('/analytics', [AdminDashboardController::class, 'analytics'])->name('analytics');
-    
-    // Settings
     Route::get('/settings', function () {
         return view('admin.settings.index');
     })->name('settings');
@@ -137,19 +150,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('inspector')->name('inspector.')->middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('inspector.dashboard');
-    })->name('dashboard');
-    
-    Route::get('/inspections', function () {
-        return view('inspector.inspections.index');
-    })->name('inspections.index');
-    
-    Route::get('/inspections/{inspection}/perform', function () {
-        return view('inspector.inspections.perform');
-    })->name('inspections.perform');
+Route::prefix('inspector')->name('inspector.')->middleware(['auth', 'role:inspector'])->group(function () {
+    Route::get('/dashboard', [InspectorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/inspections', [InspectorController::class, 'inspections'])->name('inspections.index');
+    Route::get('/inspections/{inspection}/perform', [InspectorController::class, 'perform'])->name('inspections.perform');
+    Route::post('/inspections/{inspection}/submit', [InspectorController::class, 'submitInspection'])->name('inspections.submit');
 });
 
-// Authentication Routes
+/*
+|--------------------------------------------------------------------------
+| Other Auth Routes (Password Reset, Logout, etc.)
+|--------------------------------------------------------------------------
+*/
+
 require __DIR__.'/auth.php';

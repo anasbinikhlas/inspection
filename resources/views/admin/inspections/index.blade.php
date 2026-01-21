@@ -253,6 +253,16 @@
                                                title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            <!-- {{$inspection->status}} -->
+                                            @if($inspection->status !== 'completed')
+                                                <!-- Review Button for Completed Inspections -->
+                                                <a href="{{ route('admin.inspections.review', $inspection) }}" 
+                                                   class="text-green-600 hover:text-green-900"
+                                                   title="Review & Approve">
+                                                    <i class="fas fa-clipboard-check"></i>
+                                                </a>
+                                            @endif
+                                            
                                             <a href="{{ route('admin.inspections.edit', $inspection) }}" 
                                                class="text-yellow-600 hover:text-yellow-900"
                                                title="Edit">

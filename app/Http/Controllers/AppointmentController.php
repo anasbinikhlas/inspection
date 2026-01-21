@@ -66,19 +66,19 @@ class AppointmentController extends Controller
         $isScheduleForm = $request->has('first_name'); // Schedule form sends first_name
         
         if ($isHeroForm) {
-// HERO FORM VALIDATION (Simple quick booking)
-$validated = $request->validate([
-    'customer_name' => 'required|string|max:255',
-    'customer_phone' => 'required|string|max:20',
-    'customer_email' => 'nullable|email|max:255',
-    'vehicle_make' => 'required|string|max:100',
-    'vehicle_model' => 'required|string|max:100',
-    'vehicle_year' => 'required|integer|min:1990|max:' . (date('Y') + 1),
-    'appointment_date' => 'required|date|after_or_equal:today',
-    'appointment_time' => 'required|date_format:H:i',
-    'location_id' => 'required|integer|exists:locations,id',
-    'service_type' => 'required|in:basic,comprehensive,premium,complete'
-]);
+            // HERO FORM VALIDATION (Simple quick booking)
+            $validated = $request->validate([
+                'customer_name' => 'required|string|max:255',
+                'customer_phone' => 'required|string|max:20',
+                'customer_email' => 'nullable|email|max:255',
+                'vehicle_make' => 'required|string|max:100',
+                'vehicle_model' => 'required|string|max:100',
+                'vehicle_year' => 'required|integer|min:1990|max:' . (date('Y') + 1),
+                'appointment_date' => 'required|date|after_or_equal:today',
+                'appointment_time' => 'required|date_format:H:i',
+                'location_id' => 'required|integer|exists:locations,id',
+                'service_type' => 'required|in:basic,comprehensive,premium,complete'
+            ]);
 
             // Split the customer name into first and last name
             $nameParts = explode(' ', trim($request->customer_name), 2);
@@ -88,29 +88,29 @@ $validated = $request->validate([
             $vehicleType = 'sedan'; // Default for hero form
             
         } else {
-// SCHEDULE FORM VALIDATION (Detailed booking)
-$validated = $request->validate([
-    'first_name' => 'required|string|max:255',
-    'last_name' => 'required|string|max:255',
-    'email' => 'required|email|max:255',
-    'phone' => 'required|string|max:20',
-    'address' => 'nullable|string',
-    'city' => 'nullable|string',
-    'zip_code' => 'nullable|string',
-    'vehicle_make' => 'required|string|max:100',
-    'vehicle_model' => 'required|string|max:100',
-    'vehicle_year' => 'required|integer|min:1990|max:' . (date('Y') + 1),
-    'vehicle_type' => 'required|string',
-    'mileage' => 'nullable|integer',
-    'color' => 'nullable|string',
-    'vin' => 'nullable|string|max:17',
-    'license_plate' => 'nullable|string',
-    'package_type' => 'required|in:basic,complete,premium',
-    'location_id' => 'required|integer|exists:locations,id',
-    'appointment_date' => 'required|date|after_or_equal:today',
-    'appointment_time' => 'required|date_format:H:i',
-    'customer_notes' => 'nullable|string'
-]);
+            // SCHEDULE FORM VALIDATION (Detailed booking)
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'required|string|max:20',
+                'address' => 'nullable|string',
+                'city' => 'nullable|string',
+                'zip_code' => 'nullable|string',
+                'vehicle_make' => 'required|string|max:100',
+                'vehicle_model' => 'required|string|max:100',
+                'vehicle_year' => 'required|integer|min:1990|max:' . (date('Y') + 1),
+                'vehicle_type' => 'required|string',
+                'mileage' => 'nullable|integer',
+                'color' => 'nullable|string',
+                'vin' => 'nullable|string|max:17',
+                'license_plate' => 'nullable|string',
+                'package_type' => 'required|in:basic,complete,premium',
+                'location_id' => 'required|integer|exists:locations,id',
+                'appointment_date' => 'required|date|after_or_equal:today',
+                'appointment_time' => 'required|date_format:H:i',
+                'customer_notes' => 'nullable|string'
+            ]);
             
             $firstName = $request->first_name;
             $lastName = $request->last_name;
@@ -138,17 +138,6 @@ $validated = $request->validate([
             ]
         );
 
-        // Find available inspector
-        $inspector = Inspector::where('status', 'active')
-            ->whereNotIn('id', function($query) use ($request) {
-                $query->select('inspector_id')
-                    ->from('appointments')
-                    ->where('appointment_date', $request->appointment_date)
-                    ->where('appointment_time', $request->appointment_time)
-                    ->whereNotNull('inspector_id');
-            })
-            ->first();
-
         // Map service_type/package_type to database ENUM
         $serviceType = $isHeroForm ? $request->service_type : $request->package_type;
         $packageTypeMapping = [
@@ -169,12 +158,13 @@ $validated = $request->validate([
 
         $packageInfo = $packages[$packageType];
 
-        // Create the appointment
+        // Create the appointment WITHOUT auto-assigning inspector
+        // Admin will assign inspector after confirming the appointment
         $appointment = Appointment::create([
             'appointment_number' => Appointment::generateAppointmentNumber(),
             'customer_id' => $customer->id,
             'location_id' => $request->location_id,
-            'inspector_id' => $inspector ? $inspector->id : null,
+            'inspector_id' => null,  // DO NOT AUTO-ASSIGN - Admin will assign after confirmation
             'vehicle_make' => $request->vehicle_make,
             'vehicle_model' => $request->vehicle_model,
             'vehicle_year' => $request->vehicle_year,
@@ -350,23 +340,11 @@ $validated = $request->validate([
             return back()->with('error', 'This appointment cannot be rescheduled.');
         }
 
-        // Find any available inspector
-        $inspector = Inspector::where('status', 'active')
-            ->whereNotIn('id', function($query) use ($request) {
-                $query->select('inspector_id')
-                    ->from('appointments')
-                    ->where('appointment_date', $request->appointment_date)
-                    ->where('appointment_time', $request->appointment_time)
-                    ->whereNotNull('inspector_id');
-            })
-            ->first();
-
-        // Update appointment
+        // Update appointment - don't change inspector assignment
         $appointment->update([
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
             'location_id' => $request->location_id,
-            'inspector_id' => $inspector ? $inspector->id : $appointment->inspector_id,
             'status' => 'rescheduled'
         ]);
 

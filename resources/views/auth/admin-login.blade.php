@@ -3,11 +3,11 @@
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Inspector Login</h2>
-        <p class="text-sm text-gray-600 mt-1">Sign in to your inspector account</p>
+        <h2 class="text-2xl font-bold text-gray-900">Admin Login</h2>
+        <p class="text-sm text-gray-600 mt-1">Sign in to your admin account</p>
     </div>
 
-    <form method="POST" action="{{ route('inspector.login.store') }}">
+    <form method="POST" action="{{ route('admin.login.store') }}">
         @csrf
 
         <!-- Email Address -->
@@ -51,8 +51,8 @@
     </form>
 
     <div class="mt-6 text-center">
-        <a href="{{ route('admin.login') }}" class="text-sm text-indigo-600 hover:text-indigo-700">
-            Are you an admin? Login here
+        <a href="{{ route('inspector.login') }}" class="text-sm text-indigo-600 hover:text-indigo-700">
+            Are you an inspector? Login here
         </a>
     </div>
 </x-guest-layout>
