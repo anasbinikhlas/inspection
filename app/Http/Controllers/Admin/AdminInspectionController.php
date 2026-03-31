@@ -65,7 +65,9 @@ class AdminInspectionController extends Controller
         $sortOrder = $request->get('order', 'desc');
         $query->orderBy($sortField, $sortOrder);
 
-        $inspections = $query->paginate(20)->withQueryString();
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $inspections */
+        $inspections = $query->paginate(20);
+        $inspections = $inspections->withQueryString();
 
         // Get filter options
         $inspectors = Inspector::active()->get();
@@ -358,7 +360,7 @@ class AdminInspectionController extends Controller
         ]);
 
         // Check if inspection is completed
-        if ($inspection->status !== 'completed') {
+        if ($inspection->status === 'completed') {
             return back()->with('error', 'Only completed inspections can be rejected.');
         }
 

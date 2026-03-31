@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <dt class="text-xs font-medium text-gray-500 uppercase">Submitted Date</dt>
-                    <dd class="text-sm text-gray-900 mt-1">{{ $inspection->completed_at->format('M d, Y H:i') }}</dd>
+                    <dd class="text-sm text-gray-900 mt-1">{{ $inspection->reviewed_at ? $inspection->reviewed_at->format('M d, Y H:i') : 'N/A' }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-medium text-gray-500 uppercase">Vehicle</dt>

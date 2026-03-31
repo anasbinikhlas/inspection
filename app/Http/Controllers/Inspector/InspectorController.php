@@ -109,6 +109,12 @@ class InspectorController extends Controller
             'test_drive_notes' => 'nullable|string',
         ]);
         
+        // Calculate overall score
+        $overallScore = round(
+            (($validated['engine_score'] + $validated['brakes_score'] + $validated['suspension_score'] + $validated['electrical_score'] + $validated['tires_score']) / 50) * 100,
+            2
+        );
+
         // Update inspection
         $inspection->update([
             'engine_transmission_score' => $validated['engine_score'],
@@ -117,13 +123,14 @@ class InspectorController extends Controller
             'electrical_score' => $validated['electrical_score'],
             'tyres_score' => $validated['tires_score'],
             'overall_condition' => $validated['overall_condition'],
+            'overall_score' => $overallScore,
             'major_issues' => $validated['major_issues'],
             'minor_issues' => $validated['minor_issues'],
             'recommendations' => $validated['recommendations'],
             'immediate_repairs_cost' => $validated['repair_cost'],
             'test_drive_notes' => $validated['test_drive_notes'],
-            'status' => 'completed',
-            'completed_at' => now(),
+            'status' => 'reviewed',
+            'reviewed_at' => now(),
         ]);
         
         return redirect()->route('inspector.inspections.index')
