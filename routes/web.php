@@ -56,17 +56,18 @@ Route::post('/admin/login', [AuthenticatedSessionController::class, 'store'])
 
 // Inspector Login
 Route::get('/inspector/login', function () {
-    return view('auth.login');
+    return view('auth.login', [
+        'loginRoute' => route('inspector.login.store'),
+        'heading' => 'Inspector Login',
+        'subheading' => 'Sign in to your inspector account',
+        'switchRoute' => route('admin.login'),
+        'switchText' => 'Are you an admin? Login here',
+    ]);
 })->middleware('guest')->name('inspector.login');
 
 Route::post('/inspector/login', [AuthenticatedSessionController::class, 'store'])
     ->middleware('guest')
     ->name('inspector.login.store');
-
-// Default login redirect (optional)
-Route::get('/login', function () {
-    return redirect()->route('admin.login');
-})->middleware('guest')->name('login');
 
 /*
 |--------------------------------------------------------------------------

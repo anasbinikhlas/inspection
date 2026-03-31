@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'ProInspect Admin',
             'email' => 'admin@proinspect.com',
             'password' => Hash::make('password123'),
+            'role' => 'admin',
             'email_verified_at' => now(),
         ]);
 
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'John Smith',
             'email' => 'john.smith@proinspect.com',
             'password' => Hash::make('password123'),
+            'role' => 'inspector',
             'email_verified_at' => now(),
         ]);
 
@@ -34,6 +36,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Sarah Johnson',
             'email' => 'sarah.johnson@proinspect.com',
             'password' => Hash::make('password123'),
+            'role' => 'inspector',
             'email_verified_at' => now(),
         ]);
 
