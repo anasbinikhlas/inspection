@@ -41,8 +41,10 @@ class Inspection extends Model
         'test_drive_distance',
         'test_drive_notes',
         'status',
+        'rejection_notes',
         'started_at',
         'completed_at',
+        'rejected_at',
         'reviewed_at',
         'delivered_at'
     ];
@@ -65,6 +67,7 @@ class Inspection extends Model
         'test_drive_performed' => 'boolean',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'rejected_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'delivered_at' => 'datetime'
     ];

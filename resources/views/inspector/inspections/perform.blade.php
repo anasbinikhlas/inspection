@@ -21,6 +21,26 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form action="{{ route('inspector.inspections.submit', $inspection->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
             @csrf
+            @php($isReadOnly = $inspection->status !== 'in_progress')
+
+            @if(!empty($inspection->rejection_notes) || !empty($inspection->rejected_at))
+            <div class="rounded-lg border border-red-300 bg-red-50 p-4">
+                <div class="flex items-start">
+                    <div class="mr-3 text-red-600 text-lg">!</div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-red-800">Inspection Was Rejected</h3>
+                        @if(!empty($inspection->rejected_at))
+                        <p class="mt-1 text-sm text-red-700">
+                            Rejected on {{ optional($inspection->rejected_at)->format('M d, Y h:i A') }}
+                        </p>
+                        @endif
+                        @if(!empty($inspection->rejection_notes))
+                        <p class="mt-2 text-sm text-red-700 whitespace-pre-line">{{ $inspection->rejection_notes }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- Vehicle Information (Read-only) -->
             <div class="bg-white rounded-lg shadow p-6">
@@ -51,43 +71,43 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Engine Condition</label>
-                        <input type="number" name="engine_score" min="1" max="10" value="{{ old('engine_score', $inspection->engine_transmission_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="engine_score" min="1" max="10" value="{{ old('engine_score', $inspection->engine_transmission_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Brakes</label>
-                        <input type="number" name="brakes_score" min="1" max="10" value="{{ old('brakes_score', $inspection->brakes_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="brakes_score" min="1" max="10" value="{{ old('brakes_score', $inspection->brakes_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Suspension & Steering</label>
-                        <input type="number" name="suspension_steering_score" min="1" max="10" value="{{ old('suspension_steering_score', $inspection->suspension_steering_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="suspension_steering_score" min="1" max="10" value="{{ old('suspension_steering_score', $inspection->suspension_steering_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Interior</label>
-                        <input type="number" name="interior_score" min="1" max="10" value="{{ old('interior_score', $inspection->interior_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="interior_score" min="1" max="10" value="{{ old('interior_score', $inspection->interior_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">AC & Heater</label>
-                        <input type="number" name="ac_heater_score" min="1" max="10" value="{{ old('ac_heater_score', $inspection->ac_heater_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="ac_heater_score" min="1" max="10" value="{{ old('ac_heater_score', $inspection->ac_heater_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Electrical</label>
-                        <input type="number" name="electrical_score" min="1" max="10" value="{{ old('electrical_score', $inspection->electrical_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="electrical_score" min="1" max="10" value="{{ old('electrical_score', $inspection->electrical_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Exterior & Body</label>
-                        <input type="number" name="exterior_body_score" min="1" max="10" value="{{ old('exterior_body_score', $inspection->exterior_body_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="exterior_body_score" min="1" max="10" value="{{ old('exterior_body_score', $inspection->exterior_body_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tyres</label>
-                        <input type="number" name="tyres_score" min="1" max="10" value="{{ old('tyres_score', $inspection->tyres_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="tyres_score" min="1" max="10" value="{{ old('tyres_score', $inspection->tyres_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Frame</label>
-                        <input type="number" name="frame_score" min="1" max="10" value="{{ old('frame_score', $inspection->frame_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="frame_score" min="1" max="10" value="{{ old('frame_score', $inspection->frame_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Test Drive</label>
-                        <input type="number" name="test_drive_score" min="1" max="10" value="{{ old('test_drive_score', $inspection->test_drive_score ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" name="test_drive_score" min="1" max="10" value="{{ old('test_drive_score', $inspection->test_drive_score ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
             </div>
@@ -97,23 +117,23 @@
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Overall Condition</h2>
                 <div class="space-y-3">
                     <label class="flex items-center">
-                        <input type="radio" name="overall_condition" value="excellent" {{ old('overall_condition', $inspection->overall_condition) === 'excellent' ? 'checked' : '' }} class="rounded-full">
+                        <input type="radio" name="overall_condition" value="excellent" {{ old('overall_condition', $inspection->overall_condition) === 'excellent' ? 'checked' : '' }} {{ $isReadOnly ? 'disabled' : '' }} class="rounded-full">
                         <span class="ml-3 text-gray-700">Excellent - Like New</span>
                     </label>
                     <label class="flex items-center">
-                        <input type="radio" name="overall_condition" value="good" {{ old('overall_condition', $inspection->overall_condition) === 'good' ? 'checked' : '' }} class="rounded-full">
+                        <input type="radio" name="overall_condition" value="good" {{ old('overall_condition', $inspection->overall_condition) === 'good' ? 'checked' : '' }} {{ $isReadOnly ? 'disabled' : '' }} class="rounded-full">
                         <span class="ml-3 text-gray-700">Good - Minor Issues</span>
                     </label>
                     <label class="flex items-center">
-                        <input type="radio" name="overall_condition" value="fair" {{ old('overall_condition', $inspection->overall_condition) === 'fair' ? 'checked' : '' }} class="rounded-full">
+                        <input type="radio" name="overall_condition" value="fair" {{ old('overall_condition', $inspection->overall_condition) === 'fair' ? 'checked' : '' }} {{ $isReadOnly ? 'disabled' : '' }} class="rounded-full">
                         <span class="ml-3 text-gray-700">Fair - Moderate Issues</span>
                     </label>
                     <label class="flex items-center">
-                        <input type="radio" name="overall_condition" value="poor" {{ old('overall_condition', $inspection->overall_condition) === 'poor' ? 'checked' : '' }} class="rounded-full">
+                        <input type="radio" name="overall_condition" value="poor" {{ old('overall_condition', $inspection->overall_condition) === 'poor' ? 'checked' : '' }} {{ $isReadOnly ? 'disabled' : '' }} class="rounded-full">
                         <span class="ml-3 text-gray-700">Poor - Significant Issues</span>
                     </label>
                     <label class="flex items-center">
-                        <input type="radio" name="overall_condition" value="needs_attention" {{ old('overall_condition', $inspection->overall_condition) === 'needs_attention' ? 'checked' : '' }} class="rounded-full">
+                        <input type="radio" name="overall_condition" value="needs_attention" {{ old('overall_condition', $inspection->overall_condition) === 'needs_attention' ? 'checked' : '' }} {{ $isReadOnly ? 'disabled' : '' }} class="rounded-full">
                         <span class="ml-3 text-gray-700">Needs Attention - Critical Issues</span>
                     </label>
                 </div>
@@ -122,19 +142,19 @@
             <!-- Major Issues -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Major Issues Found</h2>
-                <textarea name="major_issues" rows="4" placeholder="List any major issues found during inspection..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('major_issues', $inspection->major_issues ?? '') }}</textarea>
+                <textarea name="major_issues" rows="4" placeholder="List any major issues found during inspection..." {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('major_issues', $inspection->major_issues ?? '') }}</textarea>
             </div>
 
             <!-- Minor Issues -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Minor Issues Found</h2>
-                <textarea name="minor_issues" rows="4" placeholder="List any minor issues found..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('minor_issues', $inspection->minor_issues ?? '') }}</textarea>
+                <textarea name="minor_issues" rows="4" placeholder="List any minor issues found..." {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('minor_issues', $inspection->minor_issues ?? '') }}</textarea>
             </div>
 
             <!-- Recommendations -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Recommendations</h2>
-                <textarea name="recommendations" rows="4" placeholder="Provide recommendations for repair or maintenance..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('recommendations', $inspection->recommendations ?? '') }}</textarea>
+                <textarea name="recommendations" rows="4" placeholder="Provide recommendations for repair or maintenance..." {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('recommendations', $inspection->recommendations ?? '') }}</textarea>
             </div>
 
             <!-- Cost Estimates -->
@@ -145,14 +165,14 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Estimated Repair Cost</label>
                         <div class="flex items-center">
                             <span class="text-gray-500">$</span>
-                            <input type="number" name="immediate_repairs_cost" step="0.01" placeholder="0.00" value="{{ old('immediate_repairs_cost', $inspection->immediate_repairs_cost ?? '') }}" class="flex-1 ml-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <input type="number" name="immediate_repairs_cost" step="0.01" placeholder="0.00" value="{{ old('immediate_repairs_cost', $inspection->immediate_repairs_cost ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="flex-1 ml-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Future Maintenance Cost (if known)</label>
                         <div class="flex items-center">
                             <span class="text-gray-500">$</span>
-                            <input type="number" name="future_maintenance_cost" step="0.01" placeholder="0.00" value="{{ old('future_maintenance_cost', $inspection->future_maintenance_cost ?? '') }}" class="flex-1 ml-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <input type="number" name="future_maintenance_cost" step="0.01" placeholder="0.00" value="{{ old('future_maintenance_cost', $inspection->future_maintenance_cost ?? '') }}" {{ $isReadOnly ? 'readonly' : '' }} class="flex-1 ml-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
                 </div>
@@ -161,7 +181,7 @@
             <!-- Test Drive Notes -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Test Drive Notes</h2>
-                <textarea name="test_drive_notes" rows="4" placeholder="Document any issues found during test drive..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('test_drive_notes', $inspection->test_drive_notes ?? '') }}</textarea>
+                <textarea name="test_drive_notes" rows="4" placeholder="Document any issues found during test drive..." {{ $isReadOnly ? 'readonly' : '' }} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('test_drive_notes', $inspection->test_drive_notes ?? '') }}</textarea>
             </div>
 
             <!-- Photo Upload -->
@@ -187,7 +207,7 @@
 
                 <!-- Upload Area -->
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center" id="drop-zone">
-                    <input type="file" name="photos[]" multiple accept="image/*" class="hidden" id="photo-input">
+                    <input type="file" name="photos[]" multiple accept="image/*" class="hidden" id="photo-input" {{ $isReadOnly ? 'disabled' : '' }}>
                     <label for="photo-input" class="cursor-pointer">
                         <div class="text-4xl text-gray-400 mb-2">📷</div>
                         <p class="text-gray-600">Click to upload photos or drag and drop</p>
@@ -250,15 +270,17 @@
                 });
             </script>
 
-            <!-- Actions -->
-            <div class="bg-white rounded-lg shadow p-6 flex gap-4">
-                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Submit for Review
-                </button>
-                <button type="button" onclick="window.history.back()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 font-medium">
-                    Cancel
-                </button>
-            </div>
+            @if($inspection->status === 'in_progress')
+                <!-- Actions -->
+                <div class="bg-white rounded-lg shadow p-6 flex gap-4">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        Submit for Review
+                    </button>
+                    <button type="button" onclick="window.history.back()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 font-medium">
+                        Cancel
+                    </button>
+                </div>
+            @endif
         </form>
     </div>
 </div>
