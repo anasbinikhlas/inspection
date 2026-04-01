@@ -53,11 +53,11 @@
                                 {{ $inspection->appointment->customer->name ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @if($inspection->status === 'IN_PROGRESS')
+                                @if($inspection->status === 'in_progress')
                                     <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">⏳ In Progress</span>
-                                @elseif($inspection->status === 'COMPLETED')
+                                @elseif($inspection->status === 'reviewed')
                                     <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">🔍 Pending Review</span>
-                                @elseif($inspection->status === 'REVIEWED')
+                                @elseif($inspection->status === 'completed')
                                     <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">✅ Approved</span>
                                 @endif
                             </td>
@@ -66,7 +66,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <a href="{{ route('inspector.inspections.perform', $inspection->id) }}" class="text-blue-600 hover:text-blue-900 font-medium">
-                                    @if($inspection->status === 'IN_PROGRESS')
+                                    @if($inspection->status === 'in_progress')
                                         Continue →
                                     @else
                                         View →
