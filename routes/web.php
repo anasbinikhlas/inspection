@@ -160,7 +160,7 @@ Route::prefix('inspector')->name('inspector.')->middleware(['auth', 'role:inspec
 
 /*
 |--------------------------------------------------------------------------
-| Other Auth Routes (Password Reset, Logout, etc.)
+| Other Auth Routes (Password Reset, Logout, etc.)...
 |--------------------------------------------------------------------------
 */
 
