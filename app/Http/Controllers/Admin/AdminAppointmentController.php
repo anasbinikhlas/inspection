@@ -215,6 +215,7 @@ public function assignInspector(Request $request, Appointment $appointment)
 
 // Auto-create inspection if not exists
 // Auto-create inspection if not exists
+// Auto-create inspection if not exists
 if (!$appointment->inspection) {
     $inspection = Inspection::create([
         'inspection_number' => Inspection::generateInspectionNumber(),
