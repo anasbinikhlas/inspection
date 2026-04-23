@@ -197,6 +197,9 @@ public function assignInspector(Request $request, Appointment $appointment)
     ]);
 
     // Check if inspector is available at this time
+
+// Check if inspector is available at this time
+
     $conflict = Appointment::where('inspector_id', $request->inspector_id)
         ->where('appointment_date', $appointment->appointment_date)
         ->where('appointment_time', $appointment->appointment_time)
