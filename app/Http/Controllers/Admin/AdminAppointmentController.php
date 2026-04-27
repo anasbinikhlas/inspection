@@ -101,6 +101,10 @@ class AdminAppointmentController extends Controller
     /**
      * Update the specified appointment
      */
+ /**
+     * Update the specified appointment
+     */
+
     public function update(Request $request, Appointment $appointment)
     {
         $validated = $request->validate([
@@ -197,12 +201,6 @@ public function assignInspector(Request $request, Appointment $appointment)
     ]);
 
     // Check if inspector is available at this time
-
-// Check if inspector is available at this time
-
-    // Check if inspector is available at this time
-
-// Check if inspector is available at this time
 
 
     $conflict = Appointment::where('inspector_id', $request->inspector_id)
