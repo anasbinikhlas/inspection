@@ -101,9 +101,6 @@ class AdminAppointmentController extends Controller
     /**
      * Update the specified appointment
      */
- /**
-     * Update the specified appointment
-     */
 
     public function update(Request $request, Appointment $appointment)
     {
