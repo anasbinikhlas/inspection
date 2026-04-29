@@ -74,8 +74,7 @@ class AdminAppointmentController extends Controller
     }
 
     // REMOVED: create() method - not needed anymore
-    // REMOVED: store() method - not needed anymore
-
+    
     /**
      * Display the specified appointment
      */
