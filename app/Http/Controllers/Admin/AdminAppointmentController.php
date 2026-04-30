@@ -79,11 +79,7 @@ class AdminAppointmentController extends Controller
      * Display the specified appointment
      */
 
-    // REMOVED: create() method - not needed anymore
-    
-    /**
-     * Display the specified appointment
-     */
+
     public function show(Appointment $appointment)
     {
         $appointment->load(['customer', 'inspector', 'location', 'inspection']);
