@@ -195,6 +195,7 @@ class AdminInspectorController extends Controller
             }
 
             // Delete inspector
+            // Delete inspector
             $inspector->delete();
 
             return redirect()->route('admin.inspectors.index')
